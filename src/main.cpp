@@ -1,9 +1,21 @@
 #include <Arduino.h>
 #include <FastLED.h>
+#include <Button2.h>
 
 #define NUM_LEDS 1
 #define LED_PIN     40
 CRGB leds[NUM_LEDS];
+
+enum etats_t {
+  ETAT_ROUGE,
+  ETAT_VERT,
+};
+
+etats_t state = ETAT_VERT;
+
+Button2 btn;
+
+unsigned debut_clignote = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -20,7 +32,7 @@ void setup() {
   pinMode(33, OUTPUT); // nSLEEP
   pinMode(34, OUTPUT); // in 1
   pinMode(35, OUTPUT); // in 2
-  pinMode(5, INPUT_PULLUP);
+  // pinMode(5, INPUT_PULLUP);
 
   digitalWrite(33, HIGH);
   digitalWrite(34, LOW);
@@ -30,18 +42,21 @@ void setup() {
   digitalWrite(2, HIGH);
 
   pinMode(0, INPUT);
+  btn.begin(5);
+  btn.setClickHandler([](Button2& b){
+    state = ETAT_ROUGE;
+    debut_clignote = millis();
+  });
+  btn.setDoubleClickHandler([](Button2& b){
+    ledcAttach(39, 4000, 13);
+    ledcWriteNote(39, NOTE_D, 4);
+    delay(1000);
+    ledcWrite(39, 0);
+    delay(10000); 
+  });
 }
 
 unsigned int i = 0;
-
-enum etats_t {
-  ETAT_ROUGE,
-  ETAT_VERT,
-};
-
-etats_t state = ETAT_VERT;
-
-unsigned debut_clignote = 0;
 
 void loop() {
   i++;
@@ -61,11 +76,8 @@ void loop() {
       break;
   }
 
-  if (state == ETAT_VERT && !digitalRead(5)) {
-    state = ETAT_ROUGE;
-    debut_clignote = millis();
-  } else if (state == ETAT_ROUGE && digitalRead(5) && millis() - debut_clignote > 5000) {
+  if (state == ETAT_ROUGE && millis() - debut_clignote > 5000) {
     state = ETAT_VERT;
   }
-  delay(10);
+  btn.loop();
 }
