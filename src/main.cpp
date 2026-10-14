@@ -29,18 +29,17 @@ void setup() {
   digitalWrite(36, HIGH);
   digitalWrite(2, HIGH);
 
-
   pinMode(0, INPUT);
 }
 
 unsigned int i = 0;
 
 enum etats_t {
-  ETAT_CLIGNOTAGE,
-  ETAT_NON,
+  ETAT_ROUGE,
+  ETAT_VERT,
 };
 
-etats_t state = ETAT_NON;
+etats_t state = ETAT_VERT;
 
 unsigned debut_clignote = 0;
 
@@ -50,27 +49,23 @@ void loop() {
   if (!digitalRead(0)) {
     Serial.println("prout");
   }
+
   switch (state) {
-    case ETAT_CLIGNOTAGE:
-     if (((millis() - debut_clignote) / 250) % 2) {
-       leds[0] = CRGB::Black;
-     } else {
+    case ETAT_ROUGE:
       leds[0] = CRGB::Red;
-     }
       FastLED.show();
       break;
-    case ETAT_NON:
+    case ETAT_VERT:
       leds[0] = CRGB::Green;
       FastLED.show();
       break;
   }
 
-  if (state == ETAT_NON && !digitalRead(5)) {
-    state = ETAT_CLIGNOTAGE;
+  if (state == ETAT_VERT && !digitalRead(5)) {
+    state = ETAT_ROUGE;
     debut_clignote = millis();
+  } else if (state == ETAT_ROUGE && digitalRead(5) && millis() - debut_clignote > 5000) {
+    state = ETAT_VERT;
   }
-  else if (state == ETAT_CLIGNOTAGE && digitalRead(5) && millis() - debut_clignote > 5000) {
-    state = ETAT_NON;
-  }
-  delay(100);
+  delay(10);
 }
