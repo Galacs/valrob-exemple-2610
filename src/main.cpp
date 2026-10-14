@@ -15,7 +15,8 @@ etats_t state = ETAT_VERT;
 
 Button2 btn;
 
-unsigned debut_clignote = 0;
+unsigned long debut_clignote = 0;
+unsigned long debut_bip = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -50,9 +51,7 @@ void setup() {
   btn.setDoubleClickHandler([](Button2& b){
     ledcAttach(39, 4000, 13);
     ledcWriteNote(39, NOTE_D, 4);
-    delay(1000);
-    ledcWrite(39, 0);
-    delay(10000); 
+    debut_bip = millis();
   });
 }
 
@@ -78,6 +77,9 @@ void loop() {
 
   if (state == ETAT_ROUGE && millis() - debut_clignote > 5000) {
     state = ETAT_VERT;
+  }
+  if (millis() - debut_bip > 1000 ) {
+    ledcWrite(39, 0);
   }
   btn.loop();
 }
